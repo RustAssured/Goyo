@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고요 · Goyo · Stilte</title>
+<meta name="description" content="Een meditatiespel over adem en stilte. Joseon Dynasty esthetiek, celadon kleurenpalet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;700&family=Noto+Serif+KR:wght@300;400;600;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;}
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:#8faa96;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+  transition:background 2s ease;
+}
+.bg-layer{
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(180,200,188,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(120,150,130,0.3) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+  transition:opacity 2s;
+}
+.craquelure{
+  position:fixed;inset:0;
+  background-image:
+    repeating-linear-gradient(23deg,transparent,transparent 60px,rgba(100,120,108,0.06) 60px,rgba(100,120,108,0.06) 61px),
+    repeating-linear-gradient(107deg,transparent,transparent 80px,rgba(80,100,88,0.04) 80px,rgba(80,100,88,0.04) 81px);
+  pointer-events:none;z-index:0;
+}
+.black-veil{
+  position:fixed;inset:0;
+  background:#0d0d0d;
+  opacity:0;
+  pointer-events:none;
+  z-index:5;
+  transition:opacity 1.5s ease;
+}
+.intro{
+  position:fixed;inset:0;z-index:80;
+  background:#0d0d0d;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:24px;
+  transition:opacity 1s ease;
+}
+.intro.gone{opacity:0;pointer-events:none;}
+.intro-hangul{
+  font-family:'Noto Serif KR',serif;
+  font-size:72px;font-weight:900;
+  color:#8faa96;
+  letter-spacing:-2px;line-height:1;
+}
+.intro-celadon-line{width:1px;height:48px;background:#8faa96;opacity:0.4;}
+.intro-sub{
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:11px;font-weight:100;
+  color:rgba(143,170,150,0.6);
+  letter-spacing:8px;
+}
+.intro-desc{
+  font-size:12px;font-weight:300;
+  color:rgba(143,170,150,0.45);
+  letter-spacing:2px;text-align:center;line-height:2.2;
+  max-width:260px;
+}
+.intro-start{
+  background:transparent;
+  border:1px solid rgba(143,170,150,0.35);
+  color:#8faa96;
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:11px;font-weight:300;
+  letter-spacing:6px;
+  padding:14px 44px;
+  cursor:pointer;
+  transition:all 0.3s;
+  margin-top:8px;
+}
+.intro-start:hover{background:rgba(143,170,150,0.12);border-color:rgba(143,170,150,0.7);}
+.game{
+  position:relative;z-index:2;
+  width:min(400px,94vw);
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 0 20px;
+  gap:0;
+}
+.level-bar{
+  width:100%;display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;padding:0 2px;
+}
+.level-badge{
+  font-family:'Noto Serif KR',serif;
+  font-size:11px;font-weight:300;
+  color:rgba(255,255,255,0.5);
+  letter-spacing:4px;transition:color 1s;
+}
+.level-badge.dark{color:rgba(220,220,210,0.5);}
+.level-num{
+  font-family:'Noto Serif KR',serif;
+  font-size:22px;font-weight:900;
+  color:rgba(255,255,255,0.7);
+  line-height:1;transition:color 1s;
+}
+.level-num.dark{color:rgba(220,220,210,0.8);}
+.stage{
+  width:100%;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(2px);
+  padding:20px 18px 16px;
+  margin-bottom:10px;
+  position:relative;
+  transition:border-color 1.5s, background 1.5s;
+}
+.stage.dark-stage{
+  border-color:rgba(20,20,18,0.6);
+  background:rgba(10,10,8,0.5);
+}
+.breath-center{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;
+  height:130px;position:relative;
+  margin-bottom:6px;
+}
+.ring-wrap{
+  position:absolute;
+  display:flex;align-items:center;justify-content:center;
+}
+.arc-ring{
+  border-radius:50%;
+  position:absolute;
+  transition:transform 0.1s, opacity 0.3s, border-color 0.4s;
+}
+.arc-ring.r1{width:44px;height:44px;border:1.5px solid rgba(143,170,150,0.8);}
+.arc-ring.r2{width:76px;height:76px;border:1px solid rgba(143,170,150,0.4);}
+.arc-ring.r3{width:110px;height:110px;border:0.5px solid rgba(143,170,150,0.2);}
+.arc-ring.r4{width:124px;height:124px;border:0.5px solid rgba(143,170,150,0.1);}
+.arc-ring.window{border-color:rgba(143,170,150,0.95)!important;}
+.arc-ring.chaos-ring{border-color:rgba(180,100,80,0.7)!important;}
+.main-glyph{
+  font-family:'Noto Serif KR',serif;
+  font-size:44px;font-weight:900;
+  color:rgba(255,255,255,0.85);
+  z-index:2;line-height:1;
+  transition:transform 0.15s, color 0.3s, opacity 1s;
+  user-select:none;
+}
+.main-glyph.pulse{transform:scale(1.18);color:#c8d8c0;}
+.main-glyph.hidden-glyph{opacity:0;}
+.breath-label{
+  text-align:center;font-size:10px;font-weight:100;
+  color:rgba(255,255,255,0.4);letter-spacing:5px;
+  margin-bottom:5px;transition:opacity 1s;min-height:14px;
+}
+.timer-wrap{
+  width:100%;height:2px;
+  background:rgba(255,255,255,0.08);
+  margin-bottom:14px;overflow:hidden;transition:opacity 1s;
+}
+.timer-fill{
+  height:100%;width:0%;
+  background:rgba(143,170,150,0.7);
+  transition:width 0.08s linear, background 0.3s;
+}
+.timer-fill.window-open{background:rgba(200,220,200,0.95);}
+.timer-fill.chaos-fill{background:rgba(160,80,60,0.8);}
+.affirm-block{
+  padding:10px 0 12px;
+  border-top:0.5px solid rgba(255,255,255,0.12);
+  border-bottom:0.5px solid rgba(255,255,255,0.12);
+  margin-bottom:14px;min-height:60px;
+  display:flex;flex-direction:column;justify-content:center;
+  transition:border-color 1.5s;
+}
+.affirm-block.dark-affirm{border-color:rgba(20,20,18,0.5);}
+.affirm-kr{
+  font-family:'Noto Serif KR',serif;
+  font-size:15px;font-weight:400;
+  color:rgba(255,255,255,0.75);
+  letter-spacing:1px;line-height:1.8;
+  transition:opacity 0.5s;margin-bottom:2px;
+}
+.affirm-nl{
+  font-size:10px;font-weight:100;
+  color:rgba(255,255,255,0.3);letter-spacing:2px;
+  transition:opacity 0.5s;font-style:italic;
+}
+.ma-row{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;
+}
+.ma-lbl{font-size:9px;font-weight:100;letter-spacing:4px;color:rgba(255,255,255,0.3);}
+.ma-bar{
+  width:100%;height:6px;background:rgba(255,255,255,0.06);
+  margin-bottom:14px;position:relative;overflow:hidden;
+}
+.ma-inner{
+  position:absolute;left:0;top:0;bottom:0;
+  background:rgba(143,170,150,0.6);transition:width 0.5s ease, background 0.8s;
+}
+.ma-inner.high{background:rgba(180,210,190,0.85);}
+.ma-inner.low{background:rgba(140,70,60,0.6);}
+.stats-row{display:flex;justify-content:space-around;width:100%;}
+.stat{text-align:center;}
+.stat-num{
+  font-family:'Noto Serif KR',serif;
+  font-size:20px;font-weight:900;
+  color:rgba(255,255,255,0.7);line-height:1;transition:color 0.3s;
+}
+.stat-num.dark{color:rgba(220,220,210,0.7);}
+.stat-lbl{font-size:8px;font-weight:100;color:rgba(255,255,255,0.25);letter-spacing:3px;margin-top:2px;}
+.tap-btn{
+  width:100%;height:60px;
+  background:rgba(10,10,8,0.65);
+  border:0.5px solid rgba(255,255,255,0.12);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  transition:background 0.15s, transform 0.08s, border-color 0.5s;
+  margin-bottom:8px;position:relative;overflow:hidden;
+}
+.tap-btn:active{transform:scale(0.975);}
+.tap-btn.pressed{background:rgba(30,40,30,0.8);}
+.tap-btn.reward-state{background:rgba(143,170,150,0.15);border-color:rgba(143,170,150,0.4);}
+.tap-btn.chaos-state{background:rgba(60,10,10,0.7);border-color:rgba(180,80,60,0.3);}
+.tap-kr{
+  font-family:'Noto Serif KR',serif;
+  font-size:26px;font-weight:900;color:rgba(255,255,255,0.6);transition:color 0.3s;
+}
+.tap-sub{font-size:9px;font-weight:100;color:rgba(255,255,255,0.2);letter-spacing:5px;}
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(143,170,150,0.25);
+  transform:scale(0);
+  animation:rpl 0.6s ease-out forwards;pointer-events:none;
+}
+@keyframes rpl{to{transform:scale(5);opacity:0;}}
+.hint{
+  text-align:center;font-size:9px;font-weight:100;
+  color:rgba(255,255,255,0.22);letter-spacing:3px;line-height:2;min-height:28px;
+  transition:color 0.5s, opacity 1s;
+}
+.flash{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Noto Serif KR',serif;
+  font-size:52px;font-weight:900;
+  color:rgba(180,210,190,0.9);
+  pointer-events:none;opacity:0;z-index:20;
+}
+.flash.show{animation:flsh 0.9s ease-out forwards;}
+@keyframes flsh{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(0.7);}
+  25%{opacity:1;transform:translate(-50%,-58%) scale(1.05);}
+  100%{opacity:0;transform:translate(-50%,-80%) scale(1);}
+}
+.flash.chaos-flash{color:rgba(200,100,80,0.9);}
+.lvl-transition{
+  position:fixed;inset:0;z-index:60;
+  background:#0d0d0d;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;opacity:0;pointer-events:none;transition:opacity 0.6s;
+}
+.lvl-transition.show{opacity:1;pointer-events:all;}
+.lvl-kr-big{
+  font-family:'Noto Serif KR',serif;
+  font-size:56px;font-weight:900;color:#8faa96;letter-spacing:2px;
+}
+.lvl-sub{font-size:10px;font-weight:100;color:rgba(143,170,150,0.4);letter-spacing:6px;}
+.lvl-desc{
+  font-size:11px;font-weight:300;color:rgba(143,170,150,0.35);
+  letter-spacing:2px;text-align:center;max-width:240px;line-height:2;
+}
+.deco-v{
+  position:fixed;top:50%;
+  writing-mode:vertical-rl;
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:10px;font-weight:100;
+  color:rgba(255,255,255,0.1);letter-spacing:5px;
+  pointer-events:none;z-index:1;transform:translateY(-50%);transition:color 1.5s;
+}
+.deco-v.left{left:20px;}
+.deco-v.right{right:20px;transform:translateY(-50%) rotate(180deg);}
+.deco-v.dark-deco{color:rgba(200,200,190,0.08);}
+.celadon-dot{
+  position:fixed;border-radius:50%;
+  background:rgba(143,170,150,0.06);
+  pointer-events:none;z-index:0;transition:all 2s ease;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="craquelure"></div>
+<div class="black-veil" id="blackVeil"></div>
+<div class="deco-v left" id="decoL">고요함은 힘이다 · 숨을 따라가라</div>
+<div class="deco-v right" id="decoR">정 · 靜 · 고요</div>
+<div class="celadon-dot" style="width:300px;height:300px;top:-80px;left:-80px;"></div>
+<div class="celadon-dot" style="width:200px;height:200px;bottom:-40px;right:-40px;"></div>
+
+<div class="flash" id="flash">정</div>
+
+<div class="intro" id="intro">
+  <div class="intro-hangul">고요</div>
+  <div class="intro-celadon-line"></div>
+  <div class="intro-sub">GOYO · STILTE · 靜</div>
+  <div class="intro-desc">
+    volg de adem<br>
+    tik op het moment<br>
+    laat de hulp verdwijnen
+  </div>
+  <div class="intro-desc" style="font-size:9px;color:rgba(143,170,150,0.2);margin-top:-10px;">(bewust paradoxaal)</div>
+  <button class="intro-start" onclick="startGame()">시작하다 · BEGIN</button>
+</div>
+
+<div class="lvl-transition" id="lvlTransition">
+  <div class="lvl-kr-big" id="lvlKrBig">고요</div>
+  <div class="lvl-sub" id="lvlSub">NIVEAU 1</div>
+  <div class="lvl-desc" id="lvlDesc">volg de lichtende balk</div>
+</div>
+
+<div class="game">
+  <div class="level-bar">
+    <div class="level-badge" id="lvlBadge">단계</div>
+    <div class="level-num" id="lvlNum">1</div>
+  </div>
+
+  <div class="stage" id="stageBox">
+    <div class="breath-center">
+      <div class="ring-wrap">
+        <div class="arc-ring r4" id="r4"></div>
+        <div class="arc-ring r3" id="r3"></div>
+        <div class="arc-ring r2" id="r2"></div>
+        <div class="arc-ring r1" id="r1"></div>
+      </div>
+      <div class="main-glyph" id="mainGlyph">숨</div>
+    </div>
+
+    <div class="breath-label" id="breathLbl">숨을 들이쉬다 · ADEM IN</div>
+
+    <div class="timer-wrap" id="timerWrap">
+      <div class="timer-fill" id="timerFill"></div>
+    </div>
+
+    <div class="affirm-block" id="affirmBlock">
+      <div class="affirm-kr" id="affKR">이 순간에 존재한다</div>
+      <div class="affirm-nl" id="affNL">ik ben aanwezig in dit moment</div>
+    </div>
+
+    <div class="ma-row">
+      <div class="ma-lbl">혼돈</div>
+      <div class="ma-lbl">고요</div>
+    </div>
+    <div class="ma-bar"><div class="ma-inner" id="maInner"></div></div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num" id="sScore">0</div>
+        <div class="stat-lbl">점수</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="sStreak">0</div>
+        <div class="stat-lbl">연속</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="sMa">50</div>
+        <div class="stat-lbl">고요</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="tap-btn" id="tapBtn" onclick="onTap(event)">
+    <span class="tap-kr">누르다</span>
+    <span class="tap-sub">TAP · 누르다 · SPATIE</span>
+  </button>
+
+  <div class="hint" id="hint">tik wanneer de ringen oplichten · spatiebalk werkt ook</div>
+</div>
+
+<script>
+const CYCLE = 5000;
+const WIN = 0.20;
+const WIN_START = 0.76;
+
+const LEVELS = [
+  {n:1,  label:"고요 I",   desc:"volg de lichtende balk",                 showBar:true,  showLabel:true,  showGlyph:true,  bgLight:true,  tapNeeded:8},
+  {n:2,  label:"고요 II",  desc:"de balk vervaagt",                        showBar:true,  showLabel:true,  showGlyph:true,  bgLight:true,  tapNeeded:12},
+  {n:3,  label:"고요 III", desc:"de balk verdwijnt — voel het ritme",     showBar:false, showLabel:true,  showGlyph:true,  bgLight:true,  tapNeeded:16},
+  {n:4,  label:"고요 IV",  desc:"alleen de tekens blijven",                showBar:false, showLabel:false, showGlyph:true,  bgLight:false, tapNeeded:20},
+  {n:5,  label:"고요 V",   desc:"de tekens vervagen",                      showBar:false, showLabel:false, showGlyph:true,  bgLight:false, tapNeeded:28},
+  {n:6,  label:"정 I",     desc:"zwart omgeeft je — vertrouw je adem",    showBar:false, showLabel:false, showGlyph:false, bgLight:false, tapNeeded:36},
+  {n:7,  label:"정 II",    desc:"alleen de ringen — niets meer",           showBar:false, showLabel:false, showGlyph:false, bgLight:false, tapNeeded:48},
+  {n:8,  label:"허 · 虛",  desc:"de leegte is het doel",                   showBar:false, showLabel:false, showGlyph:false, bgLight:false, tapNeeded:999},
+];
+
+const AFFIRMATIONS = [
+  {kr:"이 순간에 존재한다",          nl:"ik ben aanwezig in dit moment"},
+  {kr:"고요함은 힘이다",             nl:"stilte is kracht"},
+  {kr:"숨과 함께 흐른다",            nl:"ik vloeie mee met de adem"},
+  {kr:"지금 여기에 있다",            nl:"ik ben hier, nu"},
+  {kr:"마음은 바다처럼 고요하다",     nl:"mijn geest is rustig als de zee"},
+  {kr:"사이를 소중히 여긴다",         nl:"ik koester de ruimte ertussen"},
+  {kr:"서두르지 않고 그저 존재한다",  nl:"zonder haast — gewoon zijn"},
+  {kr:"내면의 고요를 찾는다",         nl:"ik vind de stilte binnenin"},
+  {kr:"파도처럼 왔다가 간다",         nl:"als golven — het komt en gaat"},
+  {kr:"자신을 부드럽게 대한다",       nl:"ik behandel mezelf met zachtheid"},
+  {kr:"비움이 채움이다",             nl:"de leegte is de vulling"},
+  {kr:"어둠 속에서도 고요하다",       nl:"ook in duisternis ben ik stil"},
+];
+
+const LEVEL_GLYPHS = ["숨","정","고","요","허","空","無","虛"];
+const CHAOS_WORDS  = ["혼돈","산란","소음","불안","급함"];
+const REWARD_WORDS = ["정","고요","깊다","맑다","비움"];
+
+let audioCtx=null, gameOn=false, animId=null;
+let lvlIdx=0, score=0, streak=0, ma=50, affIdx=0;
+let breathStart=0, phase='in', tapMade=false;
+let levelScore=0, inTransition=false;
+let flashTO=null;
+
+function initAudio(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+}
+
+function playGeomungo(lvl){
+  if(!audioCtx)return;
+  const now=audioCtx.currentTime;
+  const freqs=[98,110,130.8,146.8];
+  const f=freqs[Math.min(lvl,3)];
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  const dist=audioCtx.createWaveShaper();
+  const curve=new Float32Array(256);
+  for(let i=0;i<256;i++){const x=i*2/256-1;curve[i]=x*(1+0.8*Math.abs(x))/(1+0.8);}
+  dist.curve=curve;
+  osc.connect(dist);dist.connect(gain);gain.connect(audioCtx.destination);
+  osc.frequency.value=f;osc.type='sawtooth';
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(0.18,now+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+3.5);
+  osc.start(now);osc.stop(now+3.5);
+  const osc2=audioCtx.createOscillator();
+  const g2=audioCtx.createGain();
+  osc2.connect(g2);g2.connect(audioCtx.destination);
+  osc2.frequency.value=f*2.003;osc2.type='sine';
+  g2.gain.setValueAtTime(0,now+0.05);
+  g2.gain.linearRampToValueAtTime(0.06,now+0.15);
+  g2.gain.exponentialRampToValueAtTime(0.001,now+2.8);
+  osc2.start(now+0.05);osc2.stop(now+2.8);
+}
+
+function playDaegeum(lvl){
+  if(!audioCtx||lvl>=5)return;
+  const vol=Math.max(0.01,0.14-(lvl*0.025));
+  const now=audioCtx.currentTime;
+  const freqs=[523,587,659,698,784];
+  const f=freqs[Math.floor(Math.random()*freqs.length)];
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.frequency.setValueAtTime(f,now);
+  osc.frequency.linearRampToValueAtTime(f*1.003,now+0.3);
+  osc.type='sine';
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(vol,now+0.1);
+  gain.gain.setValueAtTime(vol,now+0.6);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+1.4);
+  osc.start(now);osc.stop(now+1.4);
+}
+
+function playCeladonBell(){
+  if(!audioCtx)return;
+  const now=audioCtx.currentTime;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.frequency.value=880;osc.type='sine';
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(0.22,now+0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+1.8);
+  osc.start(now);osc.stop(now+1.8);
+  const osc2=audioCtx.createOscillator();
+  const g2=audioCtx.createGain();
+  osc2.connect(g2);g2.connect(audioCtx.destination);
+  osc2.frequency.value=880*1.497;osc2.type='sine';
+  g2.gain.setValueAtTime(0,now);
+  g2.gain.linearRampToValueAtTime(0.08,now+0.01);
+  g2.gain.exponentialRampToValueAtTime(0.001,now+1.2);
+  osc2.start(now);osc2.stop(now+1.2);
+}
+
+function playMiss(){
+  if(!audioCtx)return;
+  const now=audioCtx.currentTime;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.frequency.value=90;osc.type='triangle';
+  gain.gain.setValueAtTime(0.1,now);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+0.4);
+  osc.start(now);osc.stop(now+0.4);
+}
+
+function startAmbient(){
+  setInterval(()=>{
+    if(!gameOn||!audioCtx)return;
+    const freqs=[110,130,146,164,196];
+    const f=freqs[Math.floor(Math.random()*freqs.length)];
+    const now=audioCtx.currentTime;
+    const osc=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    osc.connect(g);g.connect(audioCtx.destination);
+    osc.frequency.value=f;osc.type='sine';
+    const vol=lvlIdx>=5?0.025:0.04;
+    g.gain.setValueAtTime(0,now);
+    g.gain.linearRampToValueAtTime(vol,now+0.5);
+    g.gain.exponentialRampToValueAtTime(0.001,now+4);
+    osc.start(now);osc.stop(now+4);
+  }, 3500+Math.random()*2000);
+}
+
+function startGame(){
+  initAudio();
+  document.getElementById('intro').classList.add('gone');
+  setTimeout(()=>document.getElementById('intro').style.display='none',1100);
+  gameOn=true;
+  breathStart=performance.now();
+  startAmbient();
+  showLevelTransition(0,true);
+}
+
+function showLevelTransition(idx,isFirst){
+  inTransition=true;
+  const lvl=LEVELS[idx];
+  const el=document.getElementById('lvlTransition');
+  document.getElementById('lvlKrBig').textContent=lvl.label;
+  document.getElementById('lvlSub').textContent='단계 '+lvl.n+' / 8';
+  document.getElementById('lvlDesc').textContent=lvl.desc;
+  el.classList.add('show');
+  playCeladonBell();
+  setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=>{
+      inTransition=false;
+      applyLevelVisuals(idx);
+      if(!animId)loop();
+    },700);
+  }, isFirst?2200:2800);
+}
+
+function applyLevelVisuals(idx){
+  const lvl=LEVELS[idx];
+  const dark=!lvl.bgLight;
+  document.body.style.background=dark
+    ?`hsl(${140+idx*8},${Math.max(5,20-idx*3)}%,${Math.max(4,18-idx*2)}%)`
+    :`hsl(${140-idx*3},${25-idx*2}%,${58-idx*3}%)`;
+  document.getElementById('timerWrap').style.opacity=lvl.showBar?1:0;
+  document.getElementById('breathLbl').style.opacity=lvl.showLabel?1:0;
+  document.getElementById('mainGlyph').classList.toggle('hidden-glyph',!lvl.showGlyph);
+  const stage=document.getElementById('stageBox');
+  stage.classList.toggle('dark-stage',dark);
+  document.getElementById('affirmBlock').classList.toggle('dark-affirm',dark);
+  ['lvlBadge','lvlNum'].forEach(id=>document.getElementById(id).classList.toggle('dark',dark));
+  ['decoL','decoR'].forEach(id=>document.getElementById(id).classList.toggle('dark-deco',dark));
+  document.querySelectorAll('.stat-num').forEach(e=>e.classList.toggle('dark',dark));
+  document.getElementById('lvlBadge').textContent='단계 '+lvl.n;
+  document.getElementById('lvlNum').textContent=lvl.n;
+  document.getElementById('mainGlyph').textContent=LEVEL_GLYPHS[idx]||'虛';
+  const hints=[
+    'tik wanneer de ringen oplichten · spatiebalk werkt ook',
+    'de balk vervaagt — voel het ritme',
+    'geen balk meer — vertrouw je lichaam',
+    'alleen de tekens — luister naar de adem',
+    'de tekens vervagen — jij en de adem',
+    'duisternis omgeeft je — vertrouw volledig',
+    'alleen de ringen — niets meer',
+    '허 · de leegte is de bestemming',
+  ];
+  document.getElementById('hint').textContent=hints[idx]||'';
+}
+
+function loop(){
+  if(!gameOn)return;
+  if(inTransition){animId=requestAnimationFrame(loop);return;}
+  const now=performance.now();
+  const elapsed=(now-breathStart)%CYCLE;
+  const half=CYCLE/2;
+  const inHalf=elapsed<half;
+  const halfPct=inHalf?(elapsed/half):((elapsed-half)/half);
+  const newPhase=inHalf?'in':'out';
+  if(newPhase!==phase){
+    phase=newPhase;
+    if(phase==='in'){
+      if(!tapMade)onMissed();
+      tapMade=false;
+      affIdx=(affIdx+1)%AFFIRMATIONS.length;
+      updateAffirm();
+      checkLevelUp();
+    }
+  }
+  const inWin=halfPct>=WIN_START&&halfPct<(WIN_START+WIN);
+  const s=0.3+halfPct*0.7;
+  ['r1','r2','r3','r4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    const sc=s*(1-i*0.1);
+    const ops=[0.9,0.55,0.3,0.12];
+    el.style.transform=`scale(${sc})`;
+    el.style.opacity=inWin?ops[i]:(ops[i]*halfPct*0.7+0.04);
+    el.classList.toggle('window',inWin);
+    el.classList.toggle('chaos-ring',ma<25&&!inWin);
+  });
+  const lvl=LEVELS[lvlIdx];
+  if(lvl.showGlyph){
+    document.getElementById('mainGlyph').textContent=
+      inHalf?LEVEL_GLYPHS[lvlIdx]:(LEVEL_GLYPHS[(lvlIdx+1)%LEVEL_GLYPHS.length]);
+  }
+  if(lvl.showLabel){
+    document.getElementById('breathLbl').textContent=
+      inHalf?'숨을 들이쉬다 · ADEM IN':'숨을 내쉬다 · ADEM UIT';
+  }
+  const fill=document.getElementById('timerFill');
+  fill.style.width=(halfPct*100)+'%';
+  fill.classList.toggle('window-open',inWin);
+  fill.classList.toggle('chaos-fill',ma<25);
+  document.getElementById('maInner').style.width=ma+'%';
+  document.getElementById('maInner').classList.toggle('high',ma>70);
+  document.getElementById('maInner').classList.toggle('low',ma<30);
+  document.getElementById('sMa').textContent=Math.round(ma);
+  const veil=document.getElementById('blackVeil');
+  veil.style.opacity=lvlIdx>=5?Math.max(0.35,0.55-(ma/200)):ma<25?0.3:0;
+  const btn=document.getElementById('tapBtn');
+  btn.classList.toggle('chaos-state',ma<25);
+  btn.classList.toggle('reward-state',streak>=5&&ma>70);
+  animId=requestAnimationFrame(loop);
+}
+
+function updateAffirm(){
+  const a=AFFIRMATIONS[affIdx];
+  const kr=document.getElementById('affKR');
+  const nl=document.getElementById('affNL');
+  kr.style.opacity=0;nl.style.opacity=0;
+  setTimeout(()=>{
+    kr.textContent=a.kr;nl.textContent=a.nl;
+    kr.style.transition='opacity 0.7s';nl.style.transition='opacity 0.7s';
+    kr.style.opacity=1;nl.style.opacity=1;
+  },200);
+}
+
+function checkLevelUp(){
+  if(lvlIdx<LEVELS.length-1&&levelScore>=LEVELS[lvlIdx].tapNeeded){
+    lvlIdx++;levelScore=0;
+    showLevelTransition(lvlIdx,false);
+  }
+}
+
+function onTap(e){
+  if(!gameOn||inTransition)return;
+  initAudio();
+  if(e){
+    const rect=e.currentTarget.getBoundingClientRect();
+    const x=(e.clientX||rect.left+rect.width/2)-rect.left;
+    const y=(e.clientY||rect.top+rect.height/2)-rect.top;
+    const rpl=document.createElement('div');
+    rpl.className='ripple';
+    rpl.style.cssText=`left:${x}px;top:${y}px;width:50px;height:50px;margin-left:-25px;margin-top:-25px;`;
+    e.currentTarget.appendChild(rpl);
+    setTimeout(()=>rpl.remove(),700);
+  }
+  const btn=document.getElementById('tapBtn');
+  btn.classList.add('pressed');
+  setTimeout(()=>btn.classList.remove('pressed'),150);
+  const now=performance.now();
+  const elapsed=(now-breathStart)%CYCLE;
+  const half=CYCLE/2;
+  const halfPct=elapsed<half?(elapsed/half):((elapsed-half)/half);
+  const inWin=halfPct>=WIN_START&&halfPct<(WIN_START+WIN);
+  const glyph=document.getElementById('mainGlyph');
+  glyph.classList.add('pulse');
+  setTimeout(()=>glyph.classList.remove('pulse'),250);
+  if(inWin&&!tapMade){
+    tapMade=true;score++;streak++;levelScore++;
+    const gain=Math.min(12,3+streak*1.3);
+    ma=Math.min(100,ma+gain);
+    playGeomungo(lvlIdx);
+    if(streak%3===0)playCeladonBell();
+    playDaegeum(lvlIdx);
+    document.getElementById('sScore').textContent=score;
+    document.getElementById('sStreak').textContent=streak;
+    showFlash(REWARD_WORDS[Math.min(streak-1,REWARD_WORDS.length-1)],false);
+  } else if(!inWin){
+    streak=0;ma=Math.max(0,ma-9);
+    playMiss();
+    document.getElementById('sStreak').textContent=0;
+    showFlash(CHAOS_WORDS[Math.floor(Math.random()*CHAOS_WORDS.length)],true);
+  }
+}
+
+function onMissed(){
+  if(tapMade)return;
+  streak=0;ma=Math.max(0,ma-6);
+  document.getElementById('sStreak').textContent=0;
+}
+
+function showFlash(word,isChaos){
+  const el=document.getElementById('flash');
+  el.textContent=word;
+  el.classList.toggle('chaos-flash',isChaos);
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(flashTO);
+  flashTO=setTimeout(()=>el.classList.remove('show'),1000);
+}
+
+document.addEventListener('keydown',e=>{
+  if((e.code==='Space'||e.code==='Enter')&&gameOn){
+    e.preventDefault();onTap(null);
+  }
+});
+</script>
+</body>
+</html>
